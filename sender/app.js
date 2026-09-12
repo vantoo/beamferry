@@ -24,11 +24,13 @@
   const receiverUrl = el("receiverUrl");
   const openReceiver = el("openReceiver");
   const openDesktopReceiver = el("openDesktopReceiver");
+  const downloadSender = el("downloadSender");
   const receiverQrCanvas = el("receiverQrCanvas");
   const rateHint = el("rateHint");
   const HEADER_LEN = 20;
-  const RECEIVER_URL = new URL("/", window.location.href).href;
-  const DESKTOP_RECEIVER_URL = new URL("/desktop-receiver/", window.location.href).href;
+  const DEFAULT_RECEIVER_URL = "https://shuipashui.github.io/beamferry/";
+  const RECEIVER_URL = resolveReceiverUrl();
+  const DESKTOP_RECEIVER_URL = new URL("desktop-receiver/", RECEIVER_URL).href;
   const QR_CACHE_LIMIT = 256;
   const QR_WORKER_COUNT = 4;
   const QUAD_MAX_FRAME_BYTES = 2068;
@@ -80,6 +82,63 @@
     ]
   };
   const HIGH_QUEUE_LIMIT = 8;
+
+  function resolveReceiverUrl() {
+    const embedded = document.querySelector('meta[name="beamferry-receiver-url"]')?.content.trim();
+    const hosted = window.location.protocol === "http:" || window.location.protocol === "https:"
+      ? new URL("/", window.location.href).href
+      : "";
+    try {
+      const resolved = new URL(embedded || hosted || DEFAULT_RECEIVER_URL);
+      if (resolved.protocol !== "http:" && resolved.protocol !== "https:") throw new Error("unsupported receiver URL");
+      return resolved.href;
+    } catch (_) {
+      return DEFAULT_RECEIVER_URL;
+    }
+  }
+
+  function withEmbeddedReceiverUrl(html) {
+    const marker = /(<meta name="beamferry-receiver-url" content=")[^"]*(">)/;
+    if (!marker.test(html)) throw new Error("receiver URL marker missing");
+    const escaped = RECEIVER_URL.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
+    return html.replace(marker, (_, start, end) => start + escaped + end);
+  }
+
+  async function downloadOfflineSender(event) {
+    event.preventDefault();
+    if (!downloadSender || downloadSender.getAttribute("aria-busy") === "true") return;
+    const originalText = downloadSender.textContent;
+    downloadSender.setAttribute("aria-busy", "true");
+    try {
+      let html;
+      if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+        const sourceUrl = new URL(window.location.href);
+        sourceUrl.hash = "";
+        sourceUrl.search = "";
+        const response = await fetch(sourceUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error("sender source unavailable");
+        html = await response.text();
+      } else {
+        html = "<!doctype html>\n" + document.documentElement.outerHTML;
+      }
+      const blobUrl = URL.createObjectURL(new Blob([withEmbeddedReceiverUrl(html)], { type: "text/html;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "beamferry-sender.html";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (error) {
+      console.error(error);
+      downloadSender.textContent = "下载失败";
+      setTimeout(() => { downloadSender.textContent = originalText; }, 1600);
+      return;
+    } finally {
+      downloadSender.removeAttribute("aria-busy");
+    }
+    downloadSender.textContent = originalText;
+  }
   const QUIET_MODULES = 2;
   const MULTI_QUIET_MODULES = 4;
   const QUAD_HIGH_FPS_QUIET_MODULES = 2;
@@ -1257,6 +1316,7 @@
   receiverUrl.textContent = RECEIVER_URL;
   if (openReceiver) openReceiver.href = RECEIVER_URL;
   if (openDesktopReceiver) openDesktopReceiver.href = DESKTOP_RECEIVER_URL;
+  if (downloadSender) downloadSender.addEventListener("click", downloadOfflineSender);
   drawLinkQr(RECEIVER_URL);
   clearCanvas();
   applyFastestLayout();
