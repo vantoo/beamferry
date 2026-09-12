@@ -272,6 +272,9 @@ assert.ok(sender.includes("个文件.zip"));
 assert.ok(sender.includes("function selectFiles"));
 assert.ok(template.includes('id="openReceiver"'), "sender must link to the receiver");
 assert.ok(sender.includes("openReceiver.href = RECEIVER_URL"));
+assert.ok(template.includes('id="openDesktopReceiver"'), "sender must link to the desktop receiver");
+assert.ok(sender.includes('new URL("/desktop-receiver/", window.location.href).href'));
+assert.ok(sender.includes("openDesktopReceiver.href = DESKTOP_RECEIVER_URL"));
 
 const rootBundle = fs.readFileSync(new URL("../highspeed-protocol.js", import.meta.url));
 const mirrorBundle = fs.readFileSync(new URL("../web-receiver/highspeed-protocol.js", import.meta.url));

@@ -23,10 +23,12 @@
   const progressBar = el("progressBar");
   const receiverUrl = el("receiverUrl");
   const openReceiver = el("openReceiver");
+  const openDesktopReceiver = el("openDesktopReceiver");
   const receiverQrCanvas = el("receiverQrCanvas");
   const rateHint = el("rateHint");
   const HEADER_LEN = 20;
   const RECEIVER_URL = new URL("/", window.location.href).href;
+  const DESKTOP_RECEIVER_URL = new URL("/desktop-receiver/", window.location.href).href;
   const QR_CACHE_LIMIT = 256;
   const QR_WORKER_COUNT = 4;
   const QUAD_MAX_FRAME_BYTES = 2068;
@@ -1254,6 +1256,7 @@
   receiverUrl.href = RECEIVER_URL;
   receiverUrl.textContent = RECEIVER_URL;
   if (openReceiver) openReceiver.href = RECEIVER_URL;
+  if (openDesktopReceiver) openDesktopReceiver.href = DESKTOP_RECEIVER_URL;
   drawLinkQr(RECEIVER_URL);
   clearCanvas();
   applyFastestLayout();

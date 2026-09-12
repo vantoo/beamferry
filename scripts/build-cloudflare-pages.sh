@@ -19,6 +19,7 @@ cp \
   receiver-storage.js \
   decoder-worker.js \
   highspeed-decoder-worker.js \
+  _redirects \
   robots.txt \
   sitemap.xml \
   _site/
