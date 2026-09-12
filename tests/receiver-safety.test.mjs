@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const source = await fs.readFile(new URL("../app.js", import.meta.url), "utf8");
 const indexHtml = await fs.readFile(new URL("../index.html", import.meta.url), "utf8");
+const styles = await fs.readFile(new URL("../styles.css", import.meta.url), "utf8");
 const robots = await fs.readFile(new URL("../robots.txt", import.meta.url), "utf8");
 const sitemap = await fs.readFile(new URL("../sitemap.xml", import.meta.url), "utf8");
 assert.ok(indexHtml.includes('rel="canonical"') && indexHtml.includes('application/ld+json'), "receiver page must expose canonical and structured search metadata");
@@ -11,8 +12,12 @@ assert.ok(indexHtml.includes('property="og:title"') && indexHtml.includes('name=
 assert.ok(robots.includes("Sitemap: https://shuipashui.github.io/beamferry/sitemap.xml"), "robots.txt must advertise the sitemap");
 assert.ok(sitemap.includes("beamferry-sender.html") && sitemap.includes("https://shuipashui.github.io/beamferry/"), "sitemap must list receiver and sender entrypoints");
 assert.ok(indexHtml.includes('id="openSender"') && indexHtml.includes("sender/dist/beamferry-sender.html"), "receiver must link to the sender");
+assert.ok(indexHtml.includes('id="result"') && indexHtml.includes('class="card result" hidden'), "receiver result must start hidden");
+assert.ok(!styles.includes(".result{display:grid"), "hidden receiver result must not be forced visible by an unconditional display rule");
+assert.ok(styles.includes(".result:not([hidden]){display:grid"), "receiver result must become a grid only after recovery removes hidden");
 const serviceWorker = await fs.readFile(new URL("../sw.js", import.meta.url), "utf8");
 const mirrorSource = await fs.readFile(new URL("../web-receiver/app.js", import.meta.url), "utf8");
+const mirrorStyles = await fs.readFile(new URL("../web-receiver/styles.css", import.meta.url), "utf8");
 const mirrorServiceWorker = await fs.readFile(new URL("../web-receiver/sw.js", import.meta.url), "utf8");
 const storage = await fs.readFile(new URL("../receiver-storage.js", import.meta.url), "utf8");
 const worker = await fs.readFile(new URL("../decoder-worker.js", import.meta.url), "utf8");
@@ -293,5 +298,6 @@ assert.ok(serviceWorker.includes('const CACHE_NAME = "airferry-lite-v94";'), "se
 assert.ok(serviceWorker.includes('path.endsWith(".wasm")'), "service worker must cache WASM/worker files instead of no-store");
 assert.ok(serviceWorker.includes('"./highspeed-protocol.js"') && serviceWorker.includes('"./vendor/decimen/highspeed-decoder-worker.js"') && serviceWorker.includes('"./vendor/decimen/multi-decoder-worker.js"') && serviceWorker.includes('"./vendor/decimen/zxing_reader-EOacYbLr.wasm"'), "high-speed receiver assets are not cached");
 assert.equal(mirrorSource, source, "web-receiver app.js drifted from the published root receiver");
+assert.equal(mirrorStyles, styles, "web-receiver styles.css drifted from the published root receiver");
 assert.equal(mirrorServiceWorker, serviceWorker, "web-receiver sw.js drifted from the published root receiver");
 console.log("receiver safety checks ok");
