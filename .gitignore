@@ -1,4 +1,5 @@
 node_modules/
+_site/
 android-receiver/.gradle/
 android-receiver/.kotlin/
 android-receiver/build/
