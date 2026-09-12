@@ -275,6 +275,9 @@ assert.ok(sender.includes("openReceiver.href = RECEIVER_URL"));
 assert.ok(template.includes('id="openDesktopReceiver"'), "sender must link to the desktop receiver");
 assert.ok(sender.includes('new URL("/desktop-receiver/", window.location.href).href'));
 assert.ok(sender.includes("openDesktopReceiver.href = DESKTOP_RECEIVER_URL"));
+assert.ok(template.includes('id="downloadSender"'), "sender must offer its standalone HTML for download");
+assert.ok(template.includes('download="beamferry-sender.html"'));
+assert.ok(template.includes('href="./beamferry-sender.html"'));
 
 const rootBundle = fs.readFileSync(new URL("../highspeed-protocol.js", import.meta.url));
 const mirrorBundle = fs.readFileSync(new URL("../web-receiver/highspeed-protocol.js", import.meta.url));
